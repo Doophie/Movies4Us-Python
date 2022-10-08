@@ -2,16 +2,18 @@
 import os
 import socket
 import subprocess
+import sys
 
 import qrcode
 import base64
+import pyautogui
 import _thread as thread
 from PIL import Image
 from os.path import isfile, join
 from os import listdir
 
 
-movie_dir = "C:/Users/qfaga/Documents/Movies"
+movie_dir = "/Volumes/Triactor/Movies"
 
 secret_key = bytearray(os.urandom(32))
 
@@ -78,8 +80,18 @@ def parse_data(conn, data):
     if data == "get_movie_list":
         #print("sending this movirew")
         conn.send(get_movie_list().encode("utf-8"))
+    if data == "playpause":
+        pyautogui.press("playpause")
+    if data == "forward":
+        pyautogui.press("right")
+    if data == "back":
+        pyautogui.press("left")
     else:
-        os.startfile(movie_dir + "/" + data + '.mp4')
+        if sys.platform == "win32":
+            os.startfile(movie_dir + "/" + data + '.mp4')
+        else:
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.call([opener, movie_dir + "/" + data + '.mp4'])
 
 
 if __name__ == '__main__':
