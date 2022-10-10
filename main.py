@@ -13,7 +13,7 @@ from os.path import isfile, join
 from os import listdir
 
 
-movie_dir = "/Volumes/Triactor/Movies"
+movie_dir = open("movie_location.txt", "r").read().strip()
 
 secret_key = bytearray(os.urandom(32))
 
@@ -80,11 +80,11 @@ def parse_data(conn, data):
     if data == "get_movie_list":
         #print("sending this movirew")
         conn.send(get_movie_list().encode("utf-8"))
-    if data == "playpause":
+    elif data == "playpause":
         pyautogui.press("playpause")
-    if data == "forward":
+    elif data == "forward":
         pyautogui.press("right")
-    if data == "back":
+    elif data == "back":
         pyautogui.press("left")
     else:
         if sys.platform == "win32":
