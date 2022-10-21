@@ -1,4 +1,5 @@
 # main.py
+import json
 import os
 import socket
 import subprocess
@@ -14,6 +15,7 @@ from os import listdir
 
 
 movie_dir = "/Volumes/Triactor/Movies"
+connection_param_file = "connection_params.json"
 
 secret_key = bytearray(os.urandom(32))
 
@@ -35,12 +37,20 @@ def get_local_ip():
 ip = get_local_ip()
 
 
-def build_connection_params(s):
-    s.bind((ip, 0))
+def build_connection_params(s, c_port=0, c_key=None):
+    s.bind((ip, c_port))
     s.listen(5)
 
-    b64_key = base64.b64encode(secret_key).decode('utf-8')
+    if c_key is not None:
+        b64_key = c_key
+    else:
+        b64_key = base64.b64encode(secret_key).decode('utf-8')
+
     port = s.getsockname()[1]
+
+    with open(connection_param_file, 'w') as f:
+        json.dump({"port":port, "key":b64_key}, f)
+
 
     qrcode.make(f"{ip}&{port}&{b64_key}").save("qr_code.jpg")
 
@@ -93,10 +103,21 @@ def parse_data(conn, data):
             opener = "open" if sys.platform == "darwin" else "xdg-open"
             subprocess.call([opener, movie_dir + "/" + data + '.mp4'])
 
+# Returns None if they dont exist
+def get_connection_params():
+    if os.path.isfile(connection_param_file):
+        with open(connection_param_file, "r") as jsonfile:
+            return json.load(jsonfile)
+    else:
+        return None
 
 if __name__ == '__main__':
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        build_connection_params(s)
+        cp = get_connection_params()
+        if cp is not None:
+            build_connection_params(s, cp["port"], cp["key"])
+        else:
+            build_connection_params(s)
 
         while True:
             conn, addr = s.accept()
