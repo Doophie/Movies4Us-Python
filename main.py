@@ -81,11 +81,11 @@ def parse_data(conn, data):
     if data == "get_movie_list":
         #print("sending this movirew")
         conn.send(get_movie_list().encode("utf-8"))
-    if data == "playpause":
+    elif data == "playpause":
         pyautogui.press("playpause")
-    if data == "forward":
+    elif data == "forward":
         pyautogui.press("right")
-    if data == "back":
+    elif data == "back":
         pyautogui.press("left")
     else:
         if sys.platform == "win32":

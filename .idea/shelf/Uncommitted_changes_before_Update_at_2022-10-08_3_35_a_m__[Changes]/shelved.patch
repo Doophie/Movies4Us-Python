@@ -1,0 +1,33 @@
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># main.py\r\nimport os\r\nimport socket\r\nimport subprocess\r\n\r\nimport qrcode\r\nimport base64\r\nimport _thread as thread\r\nfrom PIL import Image\r\nfrom os.path import isfile, join\r\nfrom os import listdir\r\n\r\n\r\nmovie_dir = \"C:/Users/qfaga/Documents/Movies\"\r\n\r\nsecret_key = bytearray(os.urandom(32))\r\n\r\n\r\ndef get_movie_list():\r\n    filenames = [f for f in listdir(movie_dir) if isfile(join(movie_dir, f))]\r\n\r\n    return \";\".join([f.split(\".\")[0] for f in filenames]) + \";\"\r\n\r\n\r\ndef get_local_ip():\r\n    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)\r\n    s.connect((\"8.8.8.8\", 80))\r\n    ip = s.getsockname()[0]\r\n    s.close()\r\n    return ip\r\n\r\n\r\nip = get_local_ip()\r\n\r\n\r\ndef build_connection_params(s):\r\n    s.bind((ip, 0))\r\n    s.listen(5)\r\n\r\n    b64_key = base64.b64encode(secret_key).decode('utf-8')\r\n    port = s.getsockname()[1]\r\n\r\n    qrcode.make(f\"{ip}&{port}&{b64_key}\").save(\"qr_code.jpg\")\r\n\r\n    Image.open(\"qr_code.jpg\").show()\r\n\r\n\r\ndef connect_to_client(conn, addr):\r\n    with conn:\r\n        print(f\"Connect to {addr}\")\r\n\r\n        conn.send(\"ack\".encode(\"utf-8\"))\r\n\r\n        while True:\r\n            try:\r\n                data = conn.recv(1024).decode('utf-8')\r\n            except Exception:\r\n                print(\"connection closed\")\r\n                break\r\n\r\n            if len(data) <= 0:\r\n                continue\r\n\r\n            if data == \"ping-test\":\r\n                print(f\"Got ping test from {addr}\")\r\n                conn.send(\"ack\".encode(\"utf-8\"))\r\n                continue\r\n\r\n            # result_string = aes_cipher.AESCipher(secret_key).decrypt(data)\r\n            print(f\"Got data {data}\")#result_string}\")\r\n\r\n            parse_data(conn, data)\r\n            print(\"Writing bytes\")\r\n            # conn.send(\"ack\".encode(\"utf-8\"))\r\n\r\n\r\ndef parse_data(conn, data):\r\n    if data == \"get_movie_list\":\r\n        #print(\"sending this movirew\")\r\n        conn.send(get_movie_list().encode(\"utf-8\"))\r\n    else:\r\n        os.startfile(movie_dir + \"/\" + data + '.mp4')\r\n\r\n\r\nif __name__ == '__main__':\r\n    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:\r\n        build_connection_params(s)\r\n\r\n        while True:\r\n            conn, addr = s.accept()\r\n\r\n            thread.start_new_thread(connect_to_client, (conn, addr))\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+--- a/main.py	(revision 013bf3841f8342971cf0638a1fd775bbdb76ad07)
++++ b/main.py	(date 1665187517680)
+@@ -11,7 +11,7 @@
+ from os import listdir
+ 
+ 
+-movie_dir = "C:/Users/qfaga/Documents/Movies"
++movie_dir = "D:/Movies"
+ 
+ secret_key = bytearray(os.urandom(32))
+ 
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision 013bf3841f8342971cf0638a1fd775bbdb76ad07)
++++ b/.gitignore	(date 1665116722183)
+@@ -1,0 +1,4 @@
++.idea/
++venv/
++qr_code.jpg
++__pycache__/
+\ No newline at end of file
